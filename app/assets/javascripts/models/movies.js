@@ -6,11 +6,11 @@ $(function() {
     };
 
 	var Movie = Backbone.Model.extend({
+	    urlRoot: 'http://cs3213.herokuapp.com/movies',
 		defaults: {
 			title: 'default title'
 		},
 		initialize: function() {
-			//console.log('Movie model creating');
 		}
 	});
 
@@ -23,14 +23,12 @@ $(function() {
     
     var Movies = new MovieList;
     
-    var MovieView = Backbone.View.extend({
-        // template: _.template($('#movie-template').html()),
-        
+    var MovieView = Backbone.View.extend({        
         events : {
             'click' : 'clicked'
         },
         clicked: function() {
-           console.log(this.model.get("title") + ' was clicked');
+           AppRouterInstance.navigate('movies/'+this.model.get("id"), true);
         },
         initialize: function () {
             _.bindAll(this, 'render', 'remove');
@@ -45,9 +43,6 @@ $(function() {
     
     var AppView = Backbone.View.extend({
         el: $("#movies-div"),
-
-        itemTemplate: _.template($('#movie-template').html()),
-
         initialize: function () {
             _.bindAll(this, 'addOne', 'addAll', 'render');
             
@@ -66,6 +61,22 @@ $(function() {
             Movies.each(this.addOne);
         }
     });
+    
+    var AppRouter = Backbone.Router.extend({
+        routes: {
+            "movies/:id" : "view_movie"
+        },
+        view_movie: function(id) {
+            var thisMovie = new Movie({id: id+".json"});
+            thisMovie.fetch({
+               success: function (thisMovie) {
+                   console.log(thisMovie.toJSON());
+               }
+            });
+        }
+    });
 
-    var App = new AppView;
+    var AppRouterInstance = new AppRouter();
+    var AppViewInstance = new AppView();
+    Backbone.history.start(); 
 });
