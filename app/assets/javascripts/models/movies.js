@@ -46,12 +46,13 @@ $(function() {
 		},
 
 		render: function() {
-			$(this.el).html(this.template(this.model.toJSON()));
+			//construct 
+			
+			$(this.el).html(this.model.get('title'));
 			return this;
 		}
 	});
 	var Movies = new MovieList();
-	m.Movie = Movies;
 
 	var AppView = Backbone.View.extend({
 
@@ -63,13 +64,16 @@ $(function() {
 			_.bindAll(this, 'addOne', 'addAll', 'render');
 
 			Movies.bind('reset', this.addAll);
-			moviesToAdd = Movies.fetch();
-			Movies.reset(moviesToAdd);
+			moviesToAdd = Movies.fetch({
+				success: function(data) {
+					console.log(data);
+					Movies.reset(data.models);
+				}
+			});
 
 		},
-		 addOne: function (question) {
-            var view = new MovieView({ model: question });
-                          
+		 addOne: function (movie) {
+            var view = new MovieView({ model: movie });
             this.$("#movie-list").append(view.render().el);
         },
 
@@ -78,32 +82,6 @@ $(function() {
         }
 	});
 
-	var App = new AppView;
-	// SearchView = Backbone.View.extend({
-	//        initialize: function(){
-	// 		var Movies = new MovieList();
-
-	// 		//fetching all movies
-	// 		Movies.fetch();
-	//            this.render();
-	//        },
-	//        render: function(){
-	//            //Pass variables in using Underscore.js Template
-	//            var variables = { search_label: "My Search" };
-	//            // Compile the template using underscore
-	//            var template = _.template( $("#search_template").html(), variables );
-	//            // Load the compiled HTML into the Backbone "el"
-	//            this.$el.html( template );
-	//        },
-	//        events: {
-	//            "click input[type=button]": "doSearch"  
-	//        },
-	//        doSearch: function( event ){
-	//            // Button clicked, you can access the element that was clicked with event.currentTarget
-	//            alert( "Search for " + $("#search_input").val() );
-	//        }
-	//    });
-
-	//     var search_view = new SearchView({ el: $("#search_container") });
-
+	var App = new AppView();
+	
 });
