@@ -32,7 +32,6 @@ $(function() {
         clicked: function() {
            console.log(this.model.get("title") + ' was clicked');
         },
-
         initialize: function () {
             _.bindAll(this, 'render', 'remove');
             this.model.bind('change', this.render);
