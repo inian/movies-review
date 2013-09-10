@@ -4,13 +4,20 @@ $(function() {
     	escape: /\{\{-(.+?)\}\}/g,
     	evaluate: /\{\{(.+?)\}\}/g,
     };
+    
+    var Review = Backbone.Model.extend({});
+    var ReviewList = Backbone.Collection.extend({
+        model: Review
+    });
 
 	var Movie = Backbone.Model.extend({
 	    urlRoot: 'http://cs3213.herokuapp.com/movies',
 		defaults: {
 			title: 'default title'
 		},
-		initialize: function() {
+		initialize: function() { 
+		    this.reviews = new ReviewList;
+		    this.reviews.url = "http://cs3213.herokuapp.com/movies/" + this.id.toString().replace(".json", "") + "/reviews.json";
 		}
 	});
 
@@ -20,8 +27,6 @@ $(function() {
 		model: Movie,
 		url: 'http://cs3213.herokuapp.com/movies.json',
 	});
-    
-    var Movies = new MovieList;
     
     var MovieView = Backbone.View.extend({       
         events : {
@@ -44,10 +49,10 @@ $(function() {
     var SingleMovieView = Backbone.View.extend({        
         initialize: function () {
             _.bindAll(this, 'render', 'remove');
-            //this.model.bind('change', this.render);
+            this.model.bind('change', this.render);
         },
         render: function () {
-            var template = _.template($('#single-movie-template').html(), {model: this.model});
+            var template = _.template($('#single-movie-template').html(), {model: this.model.toJSON()});
             $(this.el).html(template);
             return this;
         }
@@ -64,18 +69,13 @@ $(function() {
             return this;
         }
     });
-    
+
+    var Movies = new MovieList;    
     var AppView = Backbone.View.extend({
         el: $("#movies-div"),
         initialize: function () {
             _.bindAll(this, 'addOne', 'addAll', 'render');
-            
             Movies.bind('reset', this.addAll);
-            moviesToAdd = Movies.fetch({
-                success: function(data) {
-                    Movies.reset(data.models);
-                }
-            });
         },
         addOne: function (movie) {
             var view = new MovieView({ model: movie });
@@ -84,20 +84,34 @@ $(function() {
         addAll: function () {
             Movies.each(this.addOne);
         },
-        viewIndex: function() {
+        viewIndex: function(num) {
             $(this.el).empty();
-            this.addAll();
+            Movies.fetch({
+                data: $.param({page: num}),
+                success: function(data) {
+                    Movies.reset(data.models);
+                }
+            });
+            var prevNum = num - 1;
+            if (prevNum < 1) {
+                prevNum = 1;
+            }
+            var nextNum = num + 1;
+            $("#prevLink").attr("href", "/#page/"+prevNum);
+            $("#nextLink").attr("href", "/#page/"+nextNum);
+            $("#pagination").show();
         },
-        viewSingleMovie: function(movie, reviews) {
+        viewSingleMovie: function(movie) {
             $(this.el).empty();
-            var model = {movie: movie.toJSON(), reviews: reviews};
-            var view = new SingleMovieView({model: model});
+            var view = new SingleMovieView({model: movie});
             $(this.el).append(view.render().el);
+            $("#pagination").hide();
         },
         createMovie: function() {
             $(this.el).empty();
             var view = new CreateMovieView();
             $(this.el).append(view.render().el);
+            $("#pagination").hide();
         }
     });
     
@@ -107,26 +121,29 @@ $(function() {
     var AppRouter = Backbone.Router.extend({
         routes: {
             "" : "index",
+            "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
             "new_movie" : "new_movie",
+            "review/create" : "create_review"
         },
         index: function() {
-            AppViewInstance.viewIndex();
+            AppViewInstance.viewIndex(1);
+        },
+        movies_pagination: function(page) {
+            var pgNum = parseInt(page);
+            if (pgNum < 1) {
+                pgNum = 1; 
+            }
+            AppViewInstance.viewIndex(pgNum);
         },
         view_movie: function(id) {
             var thisMovie = new Movie({id: id+".json"});
             thisMovie.fetch({
                success: function (thisMovie) {
-                   $.ajax({
-                       type: 'get',
-                       cache: false,
-                       url: 'http://cs3213.herokuapp.com/movies/'+thisMovie.get("id")+"/reviews.json",
-                       dataType: 'json',
-                       error: function(jqXHR, textStatus, error) {
-                           console.log(textStatus + ": " + error);
-                       },
-                       success: function(thisMovieReviews, textStatus, jqXHR) {
-                           AppViewInstance.viewSingleMovie(thisMovie, thisMovieReviews);
+                   thisMovie.reviews.fetch({
+                       success: function(thisMovieReviews) {
+                           thisMovie.set("reviews", thisMovieReviews);
+                           AppViewInstance.viewSingleMovie(thisMovie);
                        }
                    });
                }
@@ -134,6 +151,10 @@ $(function() {
         },
         new_movie: function() {
             AppViewInstance.createMovie();
+        },
+        create_review: function() {
+            console.log("Score entered: " + $.trim($("#review_score").val()));
+            console.log("Comment entered: " + $.trim($("#review_comment").val()));
         }
     });
 

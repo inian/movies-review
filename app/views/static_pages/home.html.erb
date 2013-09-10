@@ -23,6 +23,9 @@
             <a id="new-movie" class="btn btn-primary" href="#new_movie">Add new movie</a>
         </div>
     </div>
+    <div id="pagination" class="row-fluid">
+        <a id="prevLink">&lt;&lt; Prev</a> <a id="nextLink">Next &gt;&gt;</a>
+    </div>
     <div id="movies-div" class="row-fluid">
     </div>
 </div>
@@ -51,17 +54,17 @@
 <script type="text/template" id="single-movie-template">
     <div class="row-fluid">
         <a href="/" id="movies_path">movies</a> &gt;
-        {{= model.movie.title }}
+        {{= model.title }}
         <br><br>
     </div>
     <div class="row-fluid">
         <div class="span3">
-            <img src="{{= model.movie.img_url }}">
+            <img src="{{= model.img_url }}">
         </div>
         <div class="span9">
             <div>
-                <h3>{{= model.movie.title }}</h3>
-                <p>{{= model.movie.summary }}</p>
+                <h3>{{= model.title }}</h3>
+                <p>{{= model.summary }}</p>
                 <p><a href="">Click here to delete this movie.</a> This action cannot be undone.</p>
             </div>
         </div>
@@ -72,7 +75,7 @@
         </div>
         <div id="reviews-div">
             <!-- loop through each review and display them -->
-            {{ _.each(model.reviews, function(review) { }}
+            {{ _.each(model.reviews.toJSON(), function(review) { }}
                 <div class="well">
                     <div class="row-fluid">
                         <p class="span12">
@@ -98,7 +101,7 @@
                 <textarea rows="3" name="review[comment]" id="review_comment" cols="40" class="span9">
                 </textarea>
             </div>
-            <a class="btn" id="create-review-btn" href="#">Create Review</a>
+            <a class="btn" id="create-review-btn" href="/#review/create">Create Review</a>
         </div>
     </div>
 </script>
