@@ -141,7 +141,7 @@ $(function() {
             "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
             "new_movie" : "new_movie",
-            "review/create" : "create_review"
+            "review/create/:movie_id" : "create_review"
         },
         index: function() {
             AppViewInstance.viewIndex(1);
@@ -169,10 +169,32 @@ $(function() {
         new_movie: function() {
             AppViewInstance.createMovie();
         },
-        create_review: function() {
-            console.log("Score entered: " + $.trim($("#review_score").val()));
-            console.log("Comment entered: " + $.trim($("#review_comment").val()));
-
+        create_review: function(movie_id) {
+            var token = getCookie("access_token");
+            var comment = $.trim($("#review_comment").val());
+            var score = $.trim($("#review_score").val());
+            console.log(token);
+            console.log(movie_id);
+            var data = {
+                'movie_id': movie_id,
+                'score': score,
+                'comment': comment,
+                'access_token': token
+            };
+            var url = "http://cs3213.herokuapp.com/movies/" + movie_id + "/reviews.json";
+            $.ajax({
+                url:url,
+                type:"POST",
+                dataType:"json",
+                headers: {'Content-Type':'application/json'},
+                data:JSON.stringify(data),
+                success: function(result) {
+                    window.location.href = "/#movies/"+ movie_id;
+                },
+                error: function (xhr, status, err) {
+                    console.log(xhr);
+                }
+            });
         }
     });
 
