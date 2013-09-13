@@ -195,7 +195,8 @@ $(function() {
                             $.ajax({
                                 type: 'delete',
                                 url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
-                                headers: {'Authorization': 'token ' + token},
+                                //headers: {'Authorization': 'token ' + token},
+                                data: {'access_token': token},
                                 error: function(jqXHR, textStatus, error) {
                                     console.log(textStatus + ": " + error);
                                 },
@@ -238,7 +239,8 @@ $(function() {
                             $.ajax({
                                 type: 'delete',
                                 url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
-                                headers: {'Authorization': 'token ' + token},
+                                //headers: {'Authorization': 'token ' + token},
+                                data: {'access_token': token},
                                 error: function(jqXHR, textStatus, error) {
                                     console.log(textStatus + ": " + error);
                                 },
