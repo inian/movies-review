@@ -8,7 +8,7 @@
                 <div class="nav-collapse collapse">
                     <ul class="nav pull-right">
                         <li>
-                            <a id="signin" href="/static_pages/login" style="display:none;">Sign in</a>
+                            <a id="signin" href="/oauth/login" style="display:none;">Sign in</a>
                             <a id="acksignin" style="display:none;" class="dropdown-toggle" href="#" data-toggle="dropdown">
                             </a>
                             <ul class="dropdown-menu">
@@ -132,7 +132,7 @@
                 <textarea rows="3" name="review[comment]" id="review_comment" cols="40" class="span9">
                 </textarea>
             </div>
-            <a class="btn" id="create-review-btn" href="/#review/create">Create Review</a>
+            <a class="btn" id="create-review-btn" href="/#review/create/{{=model.id}}">Create Review</a>
         </div>
     </div>
 </script>
