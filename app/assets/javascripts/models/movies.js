@@ -238,6 +238,10 @@ $(function() {
             var score = $.trim($("#review_score").val());
             console.log(token);
             console.log(movie_id);
+            if(score < 1 || score > 100) {
+                alert("Please enter a score between 1 and 100");
+                return;
+            }
             var data = {
                 'movie_id': movie_id,
                 'score': score,
