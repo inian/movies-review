@@ -26,6 +26,7 @@ $(function() {
     	evaluate: /\{\{(.+?)\}\}/g,
     };
     
+
     var Review = Backbone.Model.extend({});
     var ReviewList = Backbone.Collection.extend({
         model: Review
@@ -128,6 +129,7 @@ $(function() {
             var view = new SingleMovieView({model: movie, uid: uid});
             $(this.el).append(view.render().el);
             $("#pagination").hide();
+            $("abbr.timeago").timeago();
         },
         createMovie: function() {
             $(this.el).empty();
@@ -268,4 +270,5 @@ $(function() {
     var AppRouterInstance = new AppRouter();
     var AppViewInstance = new AppView();
     Backbone.history.start();
+
 });
