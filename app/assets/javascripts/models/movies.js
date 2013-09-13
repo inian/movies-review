@@ -144,10 +144,10 @@ $(function() {
             "" : "index",
             "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
-            "movie/delete/:id" : "delete_movie",
+            "movie/delete/:id/creator/:uid" : "delete_movie",
             "new_movie" : "new_movie",
             "review/create" : "create_review",
-            "movie/:mid/review/delete/:rid" : "delete_review",
+            "movie/:mid/review/delete/:rid/reviewer/:uid" : "delete_review",
             "logout" : "logout"
         },
         index: function() {
@@ -173,21 +173,37 @@ $(function() {
                }
             });
         },
-        delete_movie: function(id) {
+        delete_movie: function(id,uid) {
             var token = getCookie("access_token");
             if (token == null || token == "") {
                 alert("You need to sign in first");
                 window.location.href = "/#movies/"+id;
             } else {
                 $.ajax({
-                    type: 'delete',
-                    url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
-                    headers: {'Authorization': 'token ' + token},
+                    type: "get",
+                    url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
+                    cache: false,
                     error: function(jqXHR, textStatus, error) {
-                        console.log(textStatus + ": " + error);
+                        console.log("Could not get current user data - " + textStatus + ": " + error);
                     },
                     success: function(data, textStatus, jqXHR) {
-                       window.location.href = "/";
+                        var currentUserId = data.id;
+                        if (currentUserId != uid) {
+                            alert("You can only delete movies that you created.");
+                            window.location.href = "/#movies/"+id;
+                        } else {
+                            $.ajax({
+                                type: 'delete',
+                                url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
+                                headers: {'Authorization': 'token ' + token},
+                                error: function(jqXHR, textStatus, error) {
+                                    console.log(textStatus + ": " + error);
+                                },
+                                success: function(data, textStatus, jqXHR) {
+                                   window.location.href = "/";
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -200,21 +216,37 @@ $(function() {
             console.log("Comment entered: " + $.trim($("#review_comment").val()));
 
         },
-        delete_review: function(mid,rid) {
+        delete_review: function(mid,rid, uid) {
             var token = getCookie("access_token");
             if (token == null || token == "") {
                 alert("You need to sign in first");
                 window.location.href = "/#movies/"+mid;
             } else {
                 $.ajax({
-                    type: 'delete',
-                    url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
-                    headers: {'Authorization': 'token ' + token},
+                    type: "get",
+                    url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
+                    cache: false,
                     error: function(jqXHR, textStatus, error) {
-                        console.log(textStatus + ": " + error);
+                        console.log("Could not get current user data - " + textStatus + ": " + error);
                     },
                     success: function(data, textStatus, jqXHR) {
-                       window.location.href = "/#movies/"+mid;
+                        var currentUserId = data.id;
+                        if (currentUserId != uid) {
+                            alert("You can only delete reviews that you created.");
+                            window.location.href = "/#movies/"+mid;
+                        } else {
+                            $.ajax({
+                                type: 'delete',
+                                url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
+                                headers: {'Authorization': 'token ' + token},
+                                error: function(jqXHR, textStatus, error) {
+                                    console.log(textStatus + ": " + error);
+                                },
+                                success: function(data, textStatus, jqXHR) {
+                                   window.location.href = "/#movies/"+mid;
+                                }
+                            });
+                        }
                     }
                 });
             }
