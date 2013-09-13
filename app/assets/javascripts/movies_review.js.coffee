@@ -3,7 +3,7 @@ window.MoviesReview =
     Collections: {}
     Views: {}
     Routers: {}
-    initialize: -> alert 'Hello from Backbone!'
+    initialize: -> 
 
 $(document).ready ->
     MoviesReview.initialize()
