@@ -36,9 +36,9 @@ $(function() {
 		defaults: {
 			title: 'default title'
 		},
-		initialize: function() { 
+		initialize: function() {
 		    this.reviews = new ReviewList;
-		    this.reviews.url = "http://cs3213.herokuapp.com/movies/" + this.id.toString().replace(".json", "") + "/reviews.json";
+    		this.reviews.url = "http://cs3213.herokuapp.com/movies/" + this.id.toString().replace(".json", "") + "/reviews.json";
 		}
 	});
 
@@ -85,8 +85,88 @@ $(function() {
             _.bindAll(this, 'render', 'remove');
             //this.model.bind('change', this.render);
         },
+        events : {
+            'click #submit' : 'createMovieEvent'
+        },
+        createMovieEvent: function() {
+            var title = $.trim($("#movie_title").val());
+            var summary = $.trim($("#movie_summary").val());
+            var img = $.trim($("#movie_img").val());
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to log in first.");
+            } else {
+                if (title == "" || summary == "" || img == "") {
+                    alert("You must provide a title, summary and an image.");
+                } else {
+                    $("#submit").text("Creating...").attr('disabled', 'disabled');
+                    var formData = new FormData($("form[name='movie']")[0]);
+                    formData.append("access_token", token)
+                    $.ajax({
+                        url: "http://cs3213.herokuapp.com/movies.json",
+                        type: "post",
+                        data: formData,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        error: function(jqXHR, textStatus, error) {
+                            console.log(textStatus + ": " + error);
+                        },
+                        success: function(data) {
+                            window.location.href = "/#movies/" + data.id;
+                        }
+                    }); 
+                }
+            }
+        },
         render: function () {
             var template = _.template($('#create-movie-template').html());
+            $(this.el).html(template);
+            return this;
+        }
+    });
+    
+    var UpdateMovieView = Backbone.View.extend({        
+        initialize: function () {
+            _.bindAll(this, 'render', 'remove');
+            this.model.bind('change', this.render);
+        },
+        events : {
+            'click #updateMovieBtn' : 'updateMovieEvent'
+        },
+        updateMovieEvent: function() {
+            var title = $.trim($("#movie_title").val());
+            var summary = $.trim($("#movie_summary").val());
+            var img = $.trim($("#movie_img").val());
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to log in first.");
+            } else {
+                if (title == "" || summary == "") {
+                    alert("You must provide a title and summary.");
+                } else {
+                    $("#updateMovieBtn").text("Updating...").attr('disabled', 'disabled');
+                    var formData = new FormData($("form[name='update_movie']")[0]);
+                    formData.append("access_token", token)
+                    $.ajax({
+                        url: "http://cs3213.herokuapp.com/movies/"+ this.model.get("id") + ".json",
+                        type: "put",
+                        data: formData,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        error: function(jqXHR, textStatus, error) {
+                            console.log(textStatus + ": " + error);
+                        },
+                        success: function(data) {
+                            window.location.href = "/";
+                        }
+                    }); 
+                }
+            }
+        },
+        render: function () {
+            var template = _.template($('#update-movie-template').html(), {model: this.model.toJSON()});
             $(this.el).html(template);
             return this;
         }
@@ -134,6 +214,12 @@ $(function() {
             var view = new CreateMovieView();
             $(this.el).append(view.render().el);
             $("#pagination").hide();
+        },
+        updateMovie: function(thisMovie) {
+            $(this.el).empty();
+            var view = new UpdateMovieView({model: thisMovie});
+            $(this.el).append(view.render().el);
+            $("#pagination").hide();
         }
     });
     
@@ -146,6 +232,7 @@ $(function() {
             "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
             "movie/delete/:id" : "delete_movie",
+            "movie/update/:id" : "update_movie",
             "new_movie" : "new_movie",
             "movie/:mid/review/delete/:rid" : "delete_review",
             "logout" : "logout",
@@ -192,21 +279,28 @@ $(function() {
         },
         delete_movie: function(id) {
             var token = getCookie("access_token");
-                $.ajax({
-                    type: 'delete',
-                    url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
-                    //headers: {'Authorization': 'token ' + token},
-                    data: {'access_token': token},
-                    error: function(jqXHR, textStatus, error) {
-                        console.log(textStatus + ": " + error);
-                    },
-                    success: function(data, textStatus, jqXHR) {
-                       window.location.href = "/";
-                    }
-                });
+            $("#deleteMovieBtn").text("Deleting...").attr("disabled", "disabled");
+            $.ajax({
+                type: 'delete',
+                url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
+                //headers: {'Authorization': 'token ' + token},
+                data: {'access_token': token},
+                error: function(jqXHR, textStatus, error) {
+                    console.log(textStatus + ": " + error);
+                },
+                success: function(data, textStatus, jqXHR) {
+                   window.location.href = "/";
+                }
+            });
         },
         new_movie: function() {
-            AppViewInstance.createMovie();
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to log in first.");
+                window.location.href = "/";
+            } else {
+                AppViewInstance.createMovie();
+            }
         },
         delete_review: function(mid,rid) {
             var token = getCookie("access_token");
@@ -229,15 +323,12 @@ $(function() {
         },
         create_review: function(movie_id) {
             var token = getCookie("access_token");
-            console.log(token);
             if(token === null) {
                 alert("Please log in");
                 return;
             }
             var comment = $.trim($("#review_comment").val());
             var score = $.trim($("#review_score").val());
-            console.log(token);
-            console.log(movie_id);
             var data = {
                 'movie_id': movie_id,
                 'score': score,
@@ -258,6 +349,20 @@ $(function() {
                     console.log(xhr);
                 }
             });
+        },
+        update_movie: function(id) {
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to log in first.");
+                window.location.href = "/";
+            } else {
+                var thisMovie = new Movie({id: id+".json"});
+                thisMovie.fetch({
+                   success: function (thisMovie) {
+                       AppViewInstance.updateMovie(thisMovie);
+                   }
+                });
+            }
         }
     });
 
