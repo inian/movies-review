@@ -228,10 +228,10 @@ $(function() {
         create_review: function(movie_id) {
             var token = getCookie("access_token");
             console.log(token);
-            if(token == null) {
+            if(token === null) {
                 alert("Please log in");
                 return;
-            } 
+            }
             var comment = $.trim($("#review_comment").val());
             var score = $.trim($("#review_score").val());
             console.log(token);
@@ -261,5 +261,5 @@ $(function() {
 
     var AppRouterInstance = new AppRouter();
     var AppViewInstance = new AppView();
-    Backbone.history.start(); 
+    Backbone.history.start();
 });
