@@ -52,7 +52,7 @@
 
 <!-- single movie page. view only one movie with its reviews -->
 <script type="text/template" id="single-movie-template">
-    <div class="row">
+    <div class="row-fluid">
         <a href="/" id="movies_path">movies</a> &gt;
         {{= model.title }}
         <br><br>
@@ -69,15 +69,15 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="row">
+    <div class="row-fluid">
+        <div class="row-fluid">
             <h3 class="span12">Reviews</h3>
         </div>
         <div id="reviews-div">
             <!-- loop through each review and display them -->
             {{ _.each(model.reviews.toJSON(), function(review) { }}
                 <div class="well">
-                    <div class="row">
+                    <div class="row-fluid">
                         <p class="span12">
                             <strong>{{= review.user.username }} </strong> reviewed.
                             <span class="label label-success pull-right">
@@ -85,18 +85,18 @@
                             </span>
                         </p>
                     </div>
-                    <div class="row">
+                    <div class="row-fluid">
                         <p class="span12">{{= review.comment }}</p>
                     </div>
                 </div>
             {{ }); }}
         </div>
         <div class="well">
-            <div id="new-review-input" class="row">
+            <div id="new-review-input" class="row-fluid">
                 <label for="review_score" class="span3">Score (1-100)</label>
                 <input type="number" name="review[score]" id="review_score" class="span3">
             </div>
-            <div class="row">
+            <div class="row-fluid">
                 <label for="review_comment" class="span3">Comment</label>
                 <textarea rows="3" name="review[comment]" id="review_comment" cols="40" class="span9">
                 </textarea>
