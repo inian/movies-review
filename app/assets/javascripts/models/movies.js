@@ -68,12 +68,13 @@ $(function() {
     });
     
     var SingleMovieView = Backbone.View.extend({        
-        initialize: function () {
+        initialize: function (uid) {
             _.bindAll(this, 'render', 'remove');
             this.model.bind('change', this.render);
+            this.uid = uid.uid;
         },
         render: function () {
-            var template = _.template($('#single-movie-template').html(), {model: this.model.toJSON()});
+            var template = _.template($('#single-movie-template').html(), {model: this.model.toJSON(), uid: this.uid});
             $(this.el).html(template);
             return this;
         }
@@ -122,9 +123,9 @@ $(function() {
             $("#nextLink").attr("href", "/#page/"+nextNum);
             $("#pagination").show();
         },
-        viewSingleMovie: function(movie) {
+        viewSingleMovie: function(movie, uid) {
             $(this.el).empty();
-            var view = new SingleMovieView({model: movie});
+            var view = new SingleMovieView({model: movie, uid: uid});
             $(this.el).append(view.render().el);
             $("#pagination").hide();
         },
@@ -144,9 +145,9 @@ $(function() {
             "" : "index",
             "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
-            "movie/delete/:id/creator/:uid" : "delete_movie",
+            "movie/delete/:id" : "delete_movie",
             "new_movie" : "new_movie",
-            "movie/:mid/review/delete/:rid/reviewer/:uid" : "delete_review",
+            "movie/:mid/review/delete/:rid" : "delete_review",
             "logout" : "logout",
             "review/create/:movie_id" : "create_review",
         },
@@ -166,87 +167,59 @@ $(function() {
                success: function (thisMovie) {
                    thisMovie.reviews.fetch({
                        success: function(thisMovieReviews) {
-                           thisMovie.set("reviews", thisMovieReviews);
-                           AppViewInstance.viewSingleMovie(thisMovie);
+                           var token = getCookie("access_token");
+                           if (token != null && token != "") {
+                               $.ajax({
+                                   type: "get",
+                                   url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
+                                   success: function(data, textStatus, jqXHR) {
+                                       var uid = data.id;
+                                       thisMovie.set("reviews", thisMovieReviews);
+                                       AppViewInstance.viewSingleMovie(thisMovie, uid);
+                                   }
+                               });
+                           } else {
+                               var uid = null;
+                               thisMovie.set("reviews", thisMovieReviews);
+                               AppViewInstance.viewSingleMovie(thisMovie, uid);
+                           }
                        }
                    });
                }
             });
         },
-        delete_movie: function(id,uid) {
+        delete_movie: function(id) {
             var token = getCookie("access_token");
-            if (token == null || token == "") {
-                alert("You need to sign in first");
-                window.location.href = "/#movies/"+id;
-            } else {
                 $.ajax({
-                    type: "get",
-                    url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
-                    cache: false,
+                    type: 'delete',
+                    url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
+                    //headers: {'Authorization': 'token ' + token},
+                    data: {'access_token': token},
                     error: function(jqXHR, textStatus, error) {
-                        console.log("Could not get current user data - " + textStatus + ": " + error);
+                        console.log(textStatus + ": " + error);
                     },
                     success: function(data, textStatus, jqXHR) {
-                        var currentUserId = data.id;
-                        if (currentUserId != uid) {
-                            alert("You can only delete movies that you created.");
-                            window.location.href = "/#movies/"+id;
-                        } else {
-                            $.ajax({
-                                type: 'delete',
-                                url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
-                                //headers: {'Authorization': 'token ' + token},
-                                data: {'access_token': token},
-                                error: function(jqXHR, textStatus, error) {
-                                    console.log(textStatus + ": " + error);
-                                },
-                                success: function(data, textStatus, jqXHR) {
-                                   window.location.href = "/";
-                                }
-                            });
-                        }
+                       window.location.href = "/";
                     }
                 });
-            }
         },
         new_movie: function() {
             AppViewInstance.createMovie();
         },
-        delete_review: function(mid,rid, uid) {
+        delete_review: function(mid,rid) {
             var token = getCookie("access_token");
-            if (token == null || token == "") {
-                alert("You need to sign in first");
-                window.location.href = "/#movies/"+mid;
-            } else {
-                $.ajax({
-                    type: "get",
-                    url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
-                    cache: false,
-                    error: function(jqXHR, textStatus, error) {
-                        console.log("Could not get current user data - " + textStatus + ": " + error);
-                    },
-                    success: function(data, textStatus, jqXHR) {
-                        var currentUserId = data.id;
-                        if (currentUserId != uid) {
-                            alert("You can only delete reviews that you created.");
-                            window.location.href = "/#movies/"+mid;
-                        } else {
-                            $.ajax({
-                                type: 'delete',
-                                url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
-                                //headers: {'Authorization': 'token ' + token},
-                                data: {'access_token': token},
-                                error: function(jqXHR, textStatus, error) {
-                                    console.log(textStatus + ": " + error);
-                                },
-                                success: function(data, textStatus, jqXHR) {
-                                   window.location.href = "/#movies/"+mid;
-                                }
-                            });
-                        }
-                    }
-                });
-            }
+            $.ajax({
+                type: 'delete',
+                url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
+                //headers: {'Authorization': 'token ' + token},
+                data: {'access_token': token},
+                error: function(jqXHR, textStatus, error) {
+                    console.log(textStatus + ": " + error);
+                },
+                success: function(data, textStatus, jqXHR) {
+                   window.location.href = "/#movies/"+mid;
+                }
+            });
         },
         logout: function() {
             deleteCookie("access_token");
