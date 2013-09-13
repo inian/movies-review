@@ -169,6 +169,8 @@ $(function() {
                        success: function(thisMovieReviews) {
                            var token = getCookie("access_token");
                            if (token != null && token != "") {
+                               // we want the user id so that when we display the movie and reviews,
+                               // we will only display the buttons to delete them if the user has created those things
                                $.ajax({
                                    type: "get",
                                    url: "http://cs3213.herokuapp.com/users/current.json?access_token="+token,
