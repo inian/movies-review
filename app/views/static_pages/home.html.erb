@@ -8,7 +8,33 @@
                 <div class="nav-collapse collapse">
                     <ul class="nav pull-right">
                         <li>
-                            <a id="signin" href="/static_pages/login">Sign in</a>
+                            <a id="signin" href="/static_pages/login" style="display:none;">Sign in</a>
+                            <a id="acksignin" style="display:none;" class="dropdown-toggle" href="#" data-toggle="dropdown">
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="/#logout">Sign out</a>
+                                </li>
+                            </ul>
+                            <script type="text/javascript">
+                                if (getCookie("access_token") == null || getCookie("access_token") == "") {
+                                    $("#signin").show();
+                                    $("#acksignin").text("").hide();
+                                } else {
+                                    $.ajax({
+                                        type: "get",
+                                        url: "http://cs3213.herokuapp.com/users/current.json?access_token="+getCookie("access_token"),
+                                        cache: false,
+                                        error: function(jqXHR, textStatus, error) {
+                                            console.log("Could not get current user data - " + textStatus + ": " + error);
+                                        },
+                                        success: function(data, textStatus, jqXHR) {
+                                            $("#signin").hide();
+                                            $("#acksignin").html(data.email+'<i class="icon-circle-arrow-down"></i>').show();
+                                        }
+                                    });
+                                }
+                            </script>
                         </li>
                     </ul>
                 </div>
@@ -67,7 +93,7 @@
             <div>
                 <h3>{{= model.title }}</h3>
                 <p>{{= model.summary }}</p>
-                <p><a href="">Click here to delete this movie.</a> This action cannot be undone.</p>
+                <p><a href="/#movie/delete/{{= model.id }}">Click here to delete this movie.</a> This action cannot be undone.</p>
             </div>
         </div>
     </div>
@@ -89,6 +115,9 @@
                     </div>
                     <div class="row-fluid">
                         <p class="span12">{{= review.comment }}</p>
+                    </div>
+                    <div class="row-fluid">
+                        <a href="/#movie/{{= model.id }}/review/delete/{{= review.id }}"><button type="button" class="close">&times;</button></a>
                     </div>
                 </div>
             {{ }); }}

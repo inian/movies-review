@@ -15,6 +15,10 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function deleteCookie(name) {
+    document.cookie = encodeURIComponent(name) + "=deleted; expires=" + new Date(0).toUTCString();
+}
+
 $(function() {
     _.templateSettings = {
     	interpolate: /\{\{=(.+?)\}\}/g,
@@ -140,8 +144,11 @@ $(function() {
             "" : "index",
             "page/:page" : "movies_pagination",
             "movies/:id" : "view_movie",
+            "movie/delete/:id" : "delete_movie",
             "new_movie" : "new_movie",
-            "review/create" : "create_review"
+            "review/create" : "create_review",
+            "movie/:mid/review/delete/:rid" : "delete_review",
+            "logout" : "logout"
         },
         index: function() {
             AppViewInstance.viewIndex(1);
@@ -166,6 +173,25 @@ $(function() {
                }
             });
         },
+        delete_movie: function(id) {
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to sign in first");
+                window.location.href = "/#movies/"+id;
+            } else {
+                $.ajax({
+                    type: 'delete',
+                    url: 'http://cs3213.herokuapp.com/movies/'+id+'.json',
+                    headers: {'Authorization': 'token ' + token},
+                    error: function(jqXHR, textStatus, error) {
+                        console.log(textStatus + ": " + error);
+                    },
+                    success: function(data, textStatus, jqXHR) {
+                       window.location.href = "/";
+                    }
+                });
+            }
+        },
         new_movie: function() {
             AppViewInstance.createMovie();
         },
@@ -173,6 +199,29 @@ $(function() {
             console.log("Score entered: " + $.trim($("#review_score").val()));
             console.log("Comment entered: " + $.trim($("#review_comment").val()));
 
+        },
+        delete_review: function(mid,rid) {
+            var token = getCookie("access_token");
+            if (token == null || token == "") {
+                alert("You need to sign in first");
+                window.location.href = "/#movies/"+mid;
+            } else {
+                $.ajax({
+                    type: 'delete',
+                    url: 'http://cs3213.herokuapp.com/movies/'+mid+'/reviews/'+rid+'.json',
+                    headers: {'Authorization': 'token ' + token},
+                    error: function(jqXHR, textStatus, error) {
+                        console.log(textStatus + ": " + error);
+                    },
+                    success: function(data, textStatus, jqXHR) {
+                       window.location.href = "/#movies/"+mid;
+                    }
+                });
+            }
+        },
+        logout: function() {
+            deleteCookie("access_token");
+            window.location.href="/";
         }
     });
 
