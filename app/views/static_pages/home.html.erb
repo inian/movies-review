@@ -92,12 +92,14 @@
             <div>
                 <h3>{{= model.title }}</h3>
                 <p>{{= model.summary }}</p>
-                {{ if (model.user.id == uid) { }}
-                    <p>
-                        <a id="deleteMovieBtn" class="btn btn-danger" href="/#movie/delete/{{= model.id }}">Delete this movie!</a>&nbsp;
-                        <a class="btn btn-info" href="/#movie/update/{{= model.id }}">Update this movie</a>
-                    </p>
-                {{ } else { }}
+                {{ if (typeof model.user != "undefined") { }}
+                    {{ if (model.user.id == uid) { }}
+                        <p>
+                            <a id="deleteMovieBtn" class="btn btn-danger" href="/#movie/delete/{{= model.id }}">Delete this movie!</a>&nbsp;
+                            <a class="btn btn-info" href="/#movie/update/{{= model.id }}">Update this movie</a>
+                        </p>
+                    {{ } else { }}
+                    {{ } }}
                 {{ } }}
             </div>
         </div>
